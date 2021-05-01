@@ -150,13 +150,19 @@ void loop(void) {
   {
     if (encoder_delta > 0)
     {
-      Consumer.write(MEDIA_VOLUME_UP);
-      update_keycode_history(MEDIA_VOLUME_UP);
+      for (int i = 0; i < encoder_delta; i++)
+      {
+        Consumer.write(MEDIA_VOLUME_UP);
+        update_keycode_history(MEDIA_VOLUME_UP);
+      }
     }
     else if (encoder_delta < 0)
     {
-      Consumer.write(MEDIA_VOLUME_DOWN);
-      update_keycode_history(MEDIA_VOLUME_DOWN);
+      for (int i = encoder_delta; i < 0; i++)
+      {
+        Consumer.write(MEDIA_VOLUME_DOWN);
+        update_keycode_history(MEDIA_VOLUME_DOWN);
+      }
     }
   }
   
