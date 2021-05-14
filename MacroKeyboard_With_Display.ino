@@ -1,38 +1,3 @@
-/*
-
-  HelloWorld.ino
-
-  Universal 8bit Graphics Library (https://github.com/olikraus/u8g2/)
-
-  Copyright (c) 2016, olikraus@gmail.com
-  All rights reserved.
-
-  Redistribution and use in source and binary forms, with or without modification, 
-  are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright notice, this list 
-    of conditions and the following disclaimer.
-    
-  * Redistributions in binary form must reproduce the above copyright notice, this 
-    list of conditions and the following disclaimer in the documentation and/or other 
-    materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
-  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
-  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
-  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
-
-*/
-
 #include <Arduino.h>
 #include <U8g2lib.h>
 
@@ -79,16 +44,53 @@ bool switch_states[NUM_SWITCHES] = {false};
 bool previous_switch_states[NUM_SWITCHES] = {false};
 
 #define NUM_LAYERS 4
-const String layer_names[NUM_LAYERS] = {"Disabled", "Nav Cluster", "Function Keys", "COD Warzone"};
+const String layer_names[NUM_LAYERS] = {"Disabled", "Nav Cluster", "Programming", "COD Warzone"};
 int layer_number = 0;
 
-const uint8_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] = 
+#define KEYCODE_MASK 0xFF
+#define IS_MACRO     0x1000
+const uint16_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] = 
 { 
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{KEY_BACKSPACE, KEY_DELETE, KEY_PAGE_UP, KEY_INSERT, KEY_PRINT, 0, KEY_HOME, KEY_PAGE_DOWN, KEY_END, 0, 0, 0, KEY_UP_ARROW, 0, 0, 0, KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW, 0},
-{KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, KEY_F19, KEY_F20},
-{KEY_ESC, KEY_1, KEY_2, KEY_3, KEY_4, KEY_TAB, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_M, KEY_A, KEY_S, KEY_D, KEY_F, KEY_LEFT_SHIFT, KEY_N, KEY_X, KEY_G, KEY_SPACE}
+{KEY_BACKSPACE,  KEY_DELETE,     KEY_PAGE_UP,    KEY_INSERT,      KEY_PRINT,
+ KEY_TAB,        KEY_HOME,       KEY_PAGE_DOWN,  KEY_END,         IS_MACRO|5, 
+ IS_MACRO|2,     IS_MACRO|1,     KEY_UP_ARROW,   IS_MACRO|3,      IS_MACRO|4, 
+ KEY_LEFT_CTRL,  KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW, KEY_ENTER},
+ 
+{IS_MACRO|0,     IS_MACRO|1,     IS_MACRO|2,     IS_MACRO|3,      IS_MACRO|4,
+ IS_MACRO|5,     IS_MACRO|6,     IS_MACRO|7,     IS_MACRO|8,      IS_MACRO|9,
+ IS_MACRO|10,    IS_MACRO|11,    IS_MACRO|12,    IS_MACRO|13,     IS_MACRO|14,
+ KEY_F16,        KEY_F17,        KEY_F18,        KEY_F19,         KEY_F20},
+ 
+{KEY_ESC,        KEY_1,          KEY_2,          KEY_3,           KEY_4, 
+ KEY_TAB,        KEY_Q,          KEY_W,          KEY_E,           KEY_R,
+ KEY_M,          KEY_A,          KEY_S,          KEY_D,           KEY_F, 
+ KEY_LEFT_SHIFT, KEY_N,          KEY_X,          KEY_G,           KEY_SPACE}
 };
+
+#define NUM_MACROS 15
+#define MAX_MACRO_LENGTH 32
+#define MACRO_PRESS 0x100
+#define MACRO_RELEASE 0x200
+const uint16_t PROGMEM macros[NUM_MACROS][MAX_MACRO_LENGTH+1] =
+{
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_A, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_C, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_C, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_X, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_V, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_V, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Z, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Z, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Y, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{16, KEY_I, KEY_F, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{22, KEY_W, KEY_H, KEY_I, KEY_L, KEY_E, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{16, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_2, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_A, KEY_R, KEY_C, KEY_T, KEY_E, KEY_V, KEY_I, KEY_T, KEY_Y, KEY_PERIOD, KEY_C, KEY_O, KEY_M, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{10, KEY_U, KEY_I, KEY_N, KEY_T, KEY_8, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_1, KEY_6, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_3, KEY_2, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{4, KEY_I, KEY_N, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{5, KEY_C, KEY_H, KEY_A, KEY_R, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{7, KEY_S, KEY_T, KEY_R, KEY_I, KEY_N, KEY_G, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+};
+
 
 
 void checkPosition()
@@ -99,8 +101,8 @@ void checkPosition()
 const int pressed_state = LOW;
 bool is_pressed = false;
 
-const int keycode_history_size = 4;
-char keycode_history[keycode_history_size] = {0x00, 0x00, 0x00, 0x00};
+const int keycode_history_size = 6;
+char keycode_history[keycode_history_size] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 bool do_display_update = true;
 void update_keycode_history(char keycode)
@@ -118,15 +120,15 @@ void draw_display()
   if (do_display_update)
   {
     u8g2.clearBuffer();          // clear the internal memory
-    u8g2.setFont(u8g2_font_helvB08_tf);
+    u8g2.setFont(u8g2_font_helvB08_tr);
     u8g2.drawStr(0,10,"Layout:");  // write something to the internal memory
-    u8g2.drawRFrame(76, 0, 52, 12, 3);
-    u8g2.setFont(u8g2_font_courR08_tf); 
+    u8g2.drawRFrame(52, 0, 76, 12, 3);
+    u8g2.setFont(u8g2_font_courR08_tr); 
     char key_history_disp[32];
-    sprintf(key_history_disp, "%02X%02X%02X%02X", (uint8_t)keycode_history[3], (uint8_t)keycode_history[2], (uint8_t)keycode_history[1], (uint8_t)keycode_history[0]);
-    u8g2.drawStr(78,9,key_history_disp);
-    u8g2.setFont(u8g2_font_helvB14_tf); // choose a suitable font
-    u8g2.drawStr(0,32,layer_names[layer_number].c_str());  // write something to the internal memory
+    sprintf(key_history_disp, "%02X%02X%02X%02X%02X%02X", (uint8_t)keycode_history[5], (uint8_t)keycode_history[4], (uint8_t)keycode_history[3], (uint8_t)keycode_history[2], (uint8_t)keycode_history[1], (uint8_t)keycode_history[0]);
+    u8g2.drawStr(54,9,key_history_disp);
+    u8g2.setFont(u8g2_font_helvB12_tr); // choose a suitable font
+    u8g2.drawStr(0,28,layer_names[layer_number].c_str());  // write something to the internal memory
     u8g2.sendBuffer();          // transfer internal memory to the display  
     do_display_update = false;
   }
@@ -202,7 +204,7 @@ void setup(void) {
   analogWrite(LED_PIN, led_brightness);
   Consumer.begin();
   NKROKeyboard.begin();
-  //Serial.begin(115200);
+  Serial.begin(115200);
 }
 
 void loop(void) {
@@ -258,16 +260,55 @@ void loop(void) {
   {
     if(switch_states[i] != previous_switch_states[i])
     {
-      do_nkro_update = true;
-      KeyboardKeycode keycode = pgm_read_byte_near(&layer_mappings[layer_number][i]);
+      KeyboardKeycode keycode = (KEYCODE_MASK & pgm_read_byte_near(&layer_mappings[layer_number][i]));
+      bool is_macro = (IS_MACRO & pgm_read_word_near(&layer_mappings[layer_number][i])) ? true : false;
       if(switch_states[i] == true)
       {
-        NKROKeyboard.add(keycode);
-        update_keycode_history(keycode);  
+        if(!is_macro)
+        {
+          NKROKeyboard.add(keycode);
+          update_keycode_history(keycode);
+          do_nkro_update = true;
+        }
+        else
+        {
+          //send a macro
+          if(keycode < NUM_MACROS)
+          {
+            uint16_t macro_length = pgm_read_word_near(&macros[keycode][0]);
+            if(macro_length < MAX_MACRO_LENGTH)
+            {
+              for(int i = 0; i < macro_length; i++)
+              {
+                uint16_t macro_keycode = pgm_read_word_near(&macros[keycode][i+1]);
+                if(macro_keycode & MACRO_PRESS)
+                {
+                  NKROKeyboard.add((KeyboardKeycode)(KEYCODE_MASK & macro_keycode));  
+                  NKROKeyboard.send();
+                  update_keycode_history((KeyboardKeycode)(KEYCODE_MASK & macro_keycode));
+                }
+                else if(macro_keycode & MACRO_RELEASE)
+                {
+                  NKROKeyboard.remove((KeyboardKeycode)(KEYCODE_MASK & macro_keycode)); 
+                  NKROKeyboard.send(); 
+                }
+                else
+                {
+                  NKROKeyboard.write((KeyboardKeycode)(KEYCODE_MASK & macro_keycode));
+                  update_keycode_history((KeyboardKeycode)(KEYCODE_MASK & macro_keycode));
+                }
+              } 
+            }
+          }
+        }
       }
       else
       {
-        NKROKeyboard.remove(keycode);
+        if(!is_macro)
+        {
+          NKROKeyboard.remove(keycode);
+          do_nkro_update = true;
+        }
       }
     }
   }
