@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <U8g2lib.h>
 
@@ -43,8 +44,8 @@ const int switch_cols[NUM_COLS] = {COL_4_PIN, COL_3_PIN, COL_2_PIN, COL_1_PIN, C
 bool switch_states[NUM_SWITCHES] = {false};
 bool previous_switch_states[NUM_SWITCHES] = {false};
 
-#define NUM_LAYERS 4
-const String layer_names[NUM_LAYERS] = {"Disabled", "Nav Cluster", "Programming", "COD Warzone"};
+#define NUM_LAYERS 5
+const String layer_names[NUM_LAYERS] = {"Disabled", "Nav Cluster", "Numpad", "Macro + Nav", "COD Warzone"};
 int layer_number = 0;
 
 #define KEYCODE_MASK 0xFF
@@ -52,15 +53,21 @@ int layer_number = 0;
 const uint16_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] = 
 { 
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{KEY_BACKSPACE,  KEY_DELETE,     KEY_PAGE_UP,    KEY_INSERT,      KEY_PRINT,
- KEY_TAB,        KEY_HOME,       KEY_PAGE_DOWN,  KEY_END,         IS_MACRO|5, 
- IS_MACRO|2,     IS_MACRO|1,     KEY_UP_ARROW,   IS_MACRO|3,      IS_MACRO|4, 
- KEY_LEFT_CTRL,  KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW, KEY_ENTER},
- 
-{IS_MACRO|0,     IS_MACRO|1,     IS_MACRO|2,     IS_MACRO|3,      IS_MACRO|4,
- IS_MACRO|5,     IS_MACRO|6,     IS_MACRO|7,     IS_MACRO|8,      IS_MACRO|9,
- IS_MACRO|10,    IS_MACRO|11,    IS_MACRO|12,    IS_MACRO|13,     IS_MACRO|14,
- KEY_F16,        KEY_F17,        KEY_F18,        KEY_F19,         KEY_F20},
+
+{0,  KEY_INSERT,     KEY_HOME,       KEY_PAGE_UP,      KEY_PRINT,
+ 0,  KEY_DELETE,     KEY_END,        KEY_PAGE_DOWN,        0, 
+ 0,           0,     KEY_UP_ARROW,                 0,      0, 
+ 0,  KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW,  KEYPAD_ENTER},
+
+{0,         KEY_NUM_LOCK,   KEYPAD_DIVIDE,    KEYPAD_MULTIPLY,   KEYPAD_SUBTRACT,
+ 0,         KEYPAD_7,       KEYPAD_8,         KEYPAD_9,          KEYPAD_ADD, 
+ 0,         KEYPAD_4,       KEYPAD_5,         KEYPAD_6,          KEYPAD_DOT, 
+ KEYPAD_0,  KEYPAD_1,       KEYPAD_2,         KEYPAD_3,          KEYPAD_ENTER},
+
+{IS_MACRO|15,  KEY_INSERT,     KEY_HOME,       KEY_PAGE_UP,      KEY_PRINT,
+ IS_MACRO|17,  KEY_DELETE,     KEY_END,        KEY_PAGE_DOWN,    IS_MACRO|16, 
+ IS_MACRO|18,  IS_MACRO|21,    KEY_UP_ARROW,   IS_MACRO|20,      IS_MACRO|19, 
+ IS_MACRO|22,  KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW,  KEYPAD_ENTER},
  
 {KEY_ESC,        KEY_1,          KEY_2,          KEY_3,           KEY_4, 
  KEY_TAB,        KEY_Q,          KEY_W,          KEY_E,           KEY_R,
@@ -68,30 +75,36 @@ const uint16_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] =
  KEY_LEFT_SHIFT, KEY_N,          KEY_X,          KEY_G,           KEY_SPACE}
 };
 
-#define NUM_MACROS 15
+#define NUM_MACROS 23
 #define MAX_MACRO_LENGTH 32
 #define MACRO_PRESS 0x100
 #define MACRO_RELEASE 0x200
 const uint16_t PROGMEM macros[NUM_MACROS][MAX_MACRO_LENGTH+1] =
 {
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_A, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_C, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_C, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_X, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_V, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_V, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Z, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Z, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Y, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{16, KEY_I, KEY_F, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{22, KEY_W, KEY_H, KEY_I, KEY_L, KEY_E, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{16, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_2, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_A, KEY_R, KEY_C, KEY_T, KEY_E, KEY_V, KEY_I, KEY_T, KEY_Y, KEY_PERIOD, KEY_C, KEY_O, KEY_M, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{10, KEY_U, KEY_I, KEY_N, KEY_T, KEY_8, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_1, KEY_6, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_3, KEY_2, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{4, KEY_I, KEY_N, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{5, KEY_C, KEY_H, KEY_A, KEY_R, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-{7, KEY_S, KEY_T, KEY_R, KEY_I, KEY_N, KEY_G, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*0 Select All*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_A, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*1 Copy*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_C, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_C, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*2 Cut*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_X, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_X, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*3 Paste*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_V, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_V, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*4 Undo*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Z, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Z, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*5 Redo*/{4, MACRO_PRESS|KEY_LEFT_CTRL, MACRO_PRESS|KEY_Y, MACRO_RELEASE|KEY_LEFT_CTRL, MACRO_RELEASE|KEY_Y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*6 IF statement*/{16, KEY_I, KEY_F, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*7 WHILE statement*/{22, KEY_W, KEY_H, KEY_I, KEY_L, KEY_E, KEY_SPACE, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_9, KEY_0, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_ENTER, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_LEFT_BRACE, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_RETURN, KEY_UP_ARROW, KEY_UP_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, KEY_RIGHT_ARROW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*8 @arctevity.com*/{16, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_2, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_A, KEY_R, KEY_C, KEY_T, KEY_E, KEY_V, KEY_I, KEY_T, KEY_Y, KEY_PERIOD, KEY_C, KEY_O, KEY_M, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*9 uint8_t */{10, KEY_U, KEY_I, KEY_N, KEY_T, KEY_8, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*10 uint16_t*/{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_1, KEY_6, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*11 uint32_t*/{11, KEY_U, KEY_I, KEY_N, KEY_T, KEY_3, KEY_2, MACRO_PRESS|KEY_LEFT_SHIFT, KEY_MINUS, MACRO_RELEASE|KEY_LEFT_SHIFT, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*12 int*/{4, KEY_I, KEY_N, KEY_T, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*13 char*/{5, KEY_C, KEY_H, KEY_A, KEY_R, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*14 string*/{7, KEY_S, KEY_T, KEY_R, KEY_I, KEY_N, KEY_G, KEY_SPACE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*15 °*/{6, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_0, KEYPAD_1, KEYPAD_7, KEYPAD_6, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*16 ±*/{6, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_0, KEYPAD_1, KEYPAD_7, KEYPAD_7, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*17 µ*/{6, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_0, KEYPAD_1, KEYPAD_8, KEYPAD_1, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*18 Ω*/{5, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_2, KEYPAD_3, KEYPAD_4, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*19 ≈*/{5, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_2, KEYPAD_4, KEYPAD_7, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*20 ≥*/{5, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_2, KEYPAD_4, KEYPAD_2, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*21 ≤*/{5, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_2, KEYPAD_4, KEYPAD_3, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*22 π*/{5, MACRO_PRESS|KEY_LEFT_ALT, KEYPAD_2, KEYPAD_2, KEYPAD_7, MACRO_RELEASE|KEY_LEFT_ALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
-
-
 
 void checkPosition()
 {
@@ -105,6 +118,10 @@ const int keycode_history_size = 6;
 char keycode_history[keycode_history_size] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 bool do_display_update = true;
+int previous_led_state = 0;
+bool num_lock_state = false;
+bool scroll_lock_state = false;
+bool caps_lock_state = false;
 void update_keycode_history(char keycode)
 {
   do_display_update = true;
@@ -121,7 +138,23 @@ void draw_display()
   {
     u8g2.clearBuffer();          // clear the internal memory
     u8g2.setFont(u8g2_font_helvB08_tr);
-    u8g2.drawStr(0,10,"Layout:");  // write something to the internal memory
+
+    //print lock lights
+    if (num_lock_state)
+    {
+      u8g2.drawStr(0,10,"NL");  // write something to the internal memory
+    }
+
+    if (scroll_lock_state)
+    {
+      u8g2.drawStr(16,10,"SL");  // write something to the internal memory
+    }
+
+    if (caps_lock_state)
+    {
+      u8g2.drawStr(32,10,"CL");  // write something to the internal memory
+    }
+    
     u8g2.drawRFrame(52, 0, 76, 12, 3);
     u8g2.setFont(u8g2_font_courR08_tr); 
     char key_history_disp[32];
@@ -203,6 +236,7 @@ void setup(void) {
   attachInterrupt(digitalPinToInterrupt(ENCODER_IN2), checkPosition, CHANGE);
   analogWrite(LED_PIN, led_brightness);
   Consumer.begin();
+  BootKeyboard.begin();
   NKROKeyboard.begin();
   Serial.begin(115200);
 }
@@ -317,6 +351,17 @@ void loop(void) {
   {
     NKROKeyboard.send();
   }
+
+  int ledStates = BootKeyboard.getLeds();
+  if (ledStates != previous_led_state)
+  {
+    previous_led_state = ledStates;
+    do_display_update = true;
+  }
+  
+  caps_lock_state = ledStates & LED_CAPS_LOCK;
+  num_lock_state = ledStates & LED_NUM_LOCK;
+  scroll_lock_state = ledStates & LED_SCROLL_LOCK;
   
   draw_display();
   delay(1);  
