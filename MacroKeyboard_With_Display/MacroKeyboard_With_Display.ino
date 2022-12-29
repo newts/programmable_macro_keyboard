@@ -17,7 +17,7 @@
 #define ENCODER_BUTTON A3
 
 #define LED_PIN 10
-int led_brightness = 0;
+int led_brightness = 255;
 
 #define ROW_0_PIN 5
 #define ROW_1_PIN 6
@@ -56,13 +56,13 @@ const uint16_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] =
 
 {0,  KEY_INSERT,     KEY_HOME,       KEY_PAGE_UP,      KEY_PRINT,
  0,  KEY_DELETE,     KEY_END,        KEY_PAGE_DOWN,        0, 
- 0,           0,     KEY_UP_ARROW,                 0,      0, 
+ 0,           0,     KEY_UP_ARROW,                 0,      KEY_PERIOD, 
  0,  KEY_LEFT_ARROW, KEY_DOWN_ARROW, KEY_RIGHT_ARROW,  KEYPAD_ENTER},
 
 {0,         KEY_NUM_LOCK,   KEYPAD_DIVIDE,    KEYPAD_MULTIPLY,   KEYPAD_SUBTRACT,
- 0,         KEYPAD_7,       KEYPAD_8,         KEYPAD_9,          KEYPAD_ADD, 
- 0,         KEYPAD_4,       KEYPAD_5,         KEYPAD_6,          KEYPAD_DOT, 
- KEYPAD_0,  KEYPAD_1,       KEYPAD_2,         KEYPAD_3,          KEYPAD_ENTER},
+ 0,         KEY_7,       KEY_8,         KEY_9,          KEYPAD_ADD, 
+ 0,         KEY_4,       KEY_5,         KEY_6,          KEY_PERIOD, 
+ KEY_0,     KEY_1,       KEY_2,         KEY_3,          KEYPAD_ENTER},
 
 
  // Ą                Ė                     Ę                    Į                     Ų         
@@ -70,9 +70,9 @@ const uint16_t PROGMEM layer_mappings[NUM_LAYERS][NUM_SWITCHES] =
 //  ą                ė                     ę                    į                     ų
  IS_MACRO|9,        IS_MACRO|10,         IS_MACRO|11,         IS_MACRO|12,          IS_MACRO|13,
 //  Ū                Č                     Š                    Ž
- IS_MACRO|5,        IS_MACRO|6,          IS_MACRO|7,          IS_MACRO|8,           0,
+ IS_MACRO|5,        IS_MACRO|6,          IS_MACRO|7,          IS_MACRO|8,           KEY_PERIOD,
 //  ū                č                    š                     ž                   
- IS_MACRO|14,       IS_MACRO|15,         IS_MACRO|16,         IS_MACRO|17,          0  },
+ IS_MACRO|14,       IS_MACRO|15,         IS_MACRO|16,         IS_MACRO|17,          KEY_ENTER  },
 };
 
 #define NUM_MACROS 18
